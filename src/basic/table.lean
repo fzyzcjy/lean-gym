@@ -1,5 +1,10 @@
-/- Author: E.W.Ayers © 2019 
+/- Author: E.W.Ayers © 2019
 Copied from the lean-tpe projcet: https://github.com/jesse-michael-han/lean-tpe-public
+
+------ NOTE MODIFIED ------
+copied again from https://github.com/jesse-michael-han/lean-tpe-public/blob/87c7bb8dfb8271d8fcf917aae0e731600c4f4c6c/src/basic/table.lean
+https://github.com/fzyzcjy/research/issues/782#issuecomment-1365645659
+---------------------------
 -/
 import .list
 
@@ -77,6 +82,8 @@ namespace dict
     meta def is_empty : dict k α → bool := rb_map.empty
     meta instance : has_emptyc (dict k α) := ⟨empty⟩
     meta def insert : k → α → dict k α → dict k α := λ k a d, rb_map.insert d k a
+    meta def of_list (kvs : list (k × α)) : dict k α :=
+      list.foldl (λ acc kv, dict.insert (prod.fst kv) (prod.snd kv) acc) (rb_map.mk _ _) kvs
     meta def get : k → dict k α → option α := λ k d, rb_map.find d k
     meta def contains : k → dict k α → bool := λ k d, rb_map.contains d k
     meta instance : has_mem k (dict k α) := ⟨λ k d, contains k d⟩
@@ -128,7 +135,7 @@ meta structure dictd (k : Type) (α : Type) : Type :=
 namespace dictd
   variables {k : Type} [has_lt k] [decidable_rel ((<) : k → k → Prop)] {α : Type}
   meta def empty (default : k → α) : dictd k α := ⟨dict.empty, default⟩
-  meta instance [inhabited α] : has_emptyc (dictd k α) := ⟨empty (λ _, arbitrary α)⟩
+  meta instance [inhabited α] : has_emptyc (dictd k α) := ⟨empty (λ _, inhabited.default α)⟩
   meta def get (key : k) (dd : dictd k α) : α := dict.get_default (dd.2 key) key dd.1
   meta def insert (key : k) (a : α) (dd : dictd k α) : dictd k α := ⟨dict.insert key a dd.1, dd.2⟩
   meta def modify (f : α → α) (key : k) (dd : dictd k α) : dictd k α := ⟨dict.modify (λ o, f $ option.get_or_else o (dd.2 key)) key dd.1, dd.2⟩
@@ -195,7 +202,7 @@ namespace mtable
     meta def join : mtable κ → mtable κ → mtable κ := dict.merge_with (λ _, (+))
     meta def to_table : mtable κ → table κ := dict.map (λ _, ⟨⟩)
     meta def filter (f : κ → bool) : mtable κ → mtable κ := dict.filter $ λ k _, f k
-    meta instance : has_coe_to_fun (mtable κ) (λ _, κ → ℕ ):= ⟨λ t k, get k t⟩
+    meta instance : has_coe_to_fun (mtable κ) := ⟨λ _, κ → ℕ, λ t k, get k t⟩
     open format
     meta instance [has_to_tactic_format κ] : has_to_tactic_format (mtable κ) :=
     ⟨λ t, do
