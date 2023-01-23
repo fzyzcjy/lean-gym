@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euxo pipefail
 
 # NOTE(fzyzcjy) originally `setup_miniF2F.sh`
 
